@@ -1,0 +1,14 @@
+gcloud auth application-default login
+
+# Inicializa o Terraform (baixa os provedores)
+terraform init
+
+# Verifica o que será criado
+terraform plan
+
+# Aplica a configuração
+terraform apply
+
+Para habilitar o Shared VPC depois, você precisará:
+
+Obter a role roles/compute.xpnAdmin do admin da organização

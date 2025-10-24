@@ -1,0 +1,164 @@
+# ✅ Checklist de Validação Pré-Deploy
+
+## 1️⃣ Preparação do Ambiente
+
+### GCP Setup
+- [ ] Projetos criados no GCP:
+  - [ ] `ra-infra-shared-services-dev`
+  - [ ] `ra-data-pipeline-dev`
+  - [ ] `ra-analytics-dev-474600`
+- [ ] Billing habilitado em todos os projetos
+- [ ] Conta de serviço ou credenciais configuradas
+- [ ] `gcloud auth application-default login` executado
+
+### Ferramentas
+- [ ] Terraform instalado (v1.0+)
+- [ ] Google Cloud SDK instalado
+- [ ] Git instalado (para versionamento)
+
+### Permissões IAM
+- [ ] Você tem `roles/owner` ou `roles/editor` nos 3 projetos
+- [ ] Você tem `roles/compute.networkAdmin` no projeto infra
+- [ ] Você tem `roles/resourcemanager.projectIamAdmin` nos projetos
+
+## 2️⃣ Estrutura de Arquivos
+
+### Arquivos Terraform
+- [ ] `main.tf` - Providers configurados
+- [ ] `variables.tf` - Variáveis declaradas
+- [ ] `terraform.tfvars` - Valores configurados
+- [ ] `project_infra_shared.tf` - Shared VPC e componentes
+- [ ] `project_data_pipeline.tf` - Cloud Functions
+- [ ] `project_analytics_dev.tf` - BigQuery + Dataproc
+- [ ] `iam.tf` - Permissões IAM
+- [ ] `outputs.tf` - Outputs
+- [ ] `.gitignore` - Arquivos ignorados
+
+### Código das Functions
+- [ ] Diretório `functions/` criado
+- [ ] Arquivo `functions/main.py` com código válido
+- [ ] Arquivo `functions/requirements.txt` com dependências
+
+## 3️⃣ Validações de Configuração
+
+### Verificar IDs dos Projetos
+```bash
+# Conferir se os IDs estão corretos
+grep -r "ra-infra-shared-services-dev" *.tf
+grep -r "ra-data-pipeline-dev" *.tf
+grep -r "ra-analytics-dev-474600" *.tf
+```
+
+### Verificar Região
+- [ ] Região definida corretamente em `variables.tf`
+- [ ] Região é consistente em todos os recursos
+
+### Verificar CIDR
+- [ ] CIDR da Shared VPC não conflita com outras redes: `10.100.0.0/24`
+- [ ] Ranges secundários não conflitam: `10.101.0.0/16` e `10.102.0.0/16`
+
+## 4️⃣ Validações Específicas
+
+### Shared VPC
+- [ ] Host Project está correto
+- [ ] Service Projects estão listados corretamente
+- [ ] Subnet tem Private Google Access habilitado
+- [ ] Firewall rules permitem tráfego necessário
+
+### Dataproc
+- [ ] Configurado para usar Shared VPC (não VPC própria)
+- [ ] Subnetwork aponta para: `projects/ra-infra-shared-services-dev/regions/us-central1/subnetworks/ra-subnet-dev-001`
+- [ ] `internal_ip_only = true`
+- [ ] Service Account tem permissões de Network User
+
+### Cloud Functions
+- [ ] Código Python é válido
+- [ ] `requirements.txt` tem dependências corretas
+- [ ] `ingress_settings = "ALLOW_INTERNAL_ONLY"` (segurança)
+
+### BigQuery
+- [ ] Dataset location é a mesma da região principal
+- [ ] Retenção de dados configurada (90 dias)
+
+## 5️⃣ Executar Comandos de Validação
+
+```bash
+# 1. Inicializar Terraform
+terraform init
+
+# 2. Formatar código
+terraform fmt -recursive
+
+# 3. Validar sintaxe
+terraform validate
+
+# 4. Verificar plano (sem aplicar)
+terraform plan
+
+# 5. Verificar por erros ou warnings
+terraform plan | grep -i "error\|warning"
+```
+
+## 6️⃣ Checklist de Segurança
+
+### Rede
+- [ ] NAT configurado para saída segura
+- [ ] Firewall nega tráfego externo por padrão
+- [ ] Apenas portas necessárias abertas
+- [ ] Private Google Access habilitado
+
+### IAM
+- [ ] Princípio do menor privilégio aplicado
+- [ ] Service Accounts usam permissões específicas
+- [ ] Grupos IAM comentados até criação (não causam erro)
+
+### Dados
+- [ ] Buckets têm `uniform_bucket_level_access = true`
+- [ ] Buckets têm `force_destroy = true` apenas em DEV
+- [ ] Lifecycle policies configuradas
+- [ ] Retenção de logs configurada (90 dias)
+
+### Secrets
+- [ ] Secret Manager configurado
+- [ ] Valor inicial é placeholder (trocar depois)
+- [ ] Apenas Functions autorizadas têm acesso
+
+## 7️⃣ Pós-Deploy
+
+### Verificações Imediatas
+```bash
+# Verificar Shared VPC
+gcloud compute networks describe ra-vpc-dev-001 \
+  --project=ra-infra-shared-services-dev
+
+# Verificar Service Projects anexados
+gcloud compute shared-vpc list-associated-resources \
+  ra-infra-shared-services-dev
+
+# Verificar BigQuery Dataset
+bq --project_id=ra-analytics-dev-474600 ls
+
+# Verificar Dataproc
+gcloud dataproc clusters describe ra-dataproc-cluster-dev-001 \
+  --region=us-central1 \
+  --project=ra-analytics-dev-474600
+
+# Verificar Functions
+gcloud functions list --project=ra-data-pipeline-dev
+```
+
+### Testes Funcionais
+- [ ] Cloud Functions respondem (teste interno)
+- [ ] Dataproc consegue acessar BigQuery
+- [ ] Dataproc consegue ler/escrever no Storage
+- [ ] NAT permite saída para internet
+- [ ] Logs estão sendo coletados
+- [ ] Monitoring está ativo
+
+## 8️⃣ Documentação
+
+- [ ] README.md atualizado com instruções
+- [ ] Outputs documentados
+- [ ] Diagramas de arquitetura salvos
+- [ ] Credenciais documentadas (de forma segura)
+- [ ]

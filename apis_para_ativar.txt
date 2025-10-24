@@ -1,0 +1,10 @@
+APIs a Serem Ativadas
+Lembre-se de ativar estas APIs no projeto ra-analytics-dev:
+
+bigquery.googleapis.com (BigQuery)
+
+dataproc.googleapis.com (Dataproc)
+
+datacatalog.googleapis.com (Data Catalog)
+
+storage.googleapis.com (Para o bucket de staging do Dataproc)
